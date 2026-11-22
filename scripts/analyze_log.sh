@@ -1,17 +1,15 @@
 #!/bin/bash
 # ==============================================================================
 # Skrip Analisis Log Server (Pemantauan Keamanan & Akses Web)
-# Mata Kuliah: Administrasi Sistem Berbasis Open Source (ASBOS) - Kelompok 4
 # Penanggung Jawab: Fadjri (Role 1 - System Administrator & Security Lead)
-# Lokasi di Server: /opt/scripts/analyze_log.sh
-# Target Output: /var/log/laporan_anomali.txt
+# Lokasi: /opt/scripts/analyze_log.sh
+# Output: /var/log/laporan_anomali.txt
 # ==============================================================================
 
 OUTPUT_FILE="/var/log/laporan_anomali.txt"
 AUTH_LOG="/var/log/auth.log"
 NGINX_LOG="/var/log/nginx/access.log"
 
-# Buat header laporan dengan timestamp
 cat << 'EOF' > "$OUTPUT_FILE"
 ================================================================================
                     LAPORAN ANALISIS LOG & ANOMALI SERVER
@@ -24,18 +22,16 @@ echo "Pemeriksa (Role 1)      : Fadjri (System Administrator & Security Lead)" >
 echo "================================================================================" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
-# ------------------------------------------------------------------------------
-# BAGIAN 1: Top 5 IP Percobaan Gagal Login SSH (/var/log/auth.log)
-# ------------------------------------------------------------------------------
+# 1. Top 5 IP Percobaan Gagal Login SSH (/var/log/auth.log)
 echo "--- [1] TOP 5 ALAMAT IP GAGAL LOGIN SSH (/var/log/auth.log) ---" >> "$OUTPUT_FILE"
 echo "Format: [Jumlah Percobaan Gagal] [Alamat IP Penyerang]" >> "$OUTPUT_FILE"
 echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
 
 if [ -f "$AUTH_LOG" ]; then
-    # Menangkap pola umum kegagalan SSH (Failed password, Invalid user, Failed publickey, Connection closed)
-    # Lalu mengekstrak hanya pola alamat IP (IPv4) secara presisi menggunakan grep/awk
+    # Filter pola kegagalan SSH, ekstrak token setelah 'from', lalu validasi IPv4
     SSH_FAILURES=$(grep -E 'Failed password|Invalid user|Failed publickey|Connection closed.*authenticating' "$AUTH_LOG" 2>/dev/null \
-        | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+        | sed -n 's/.*from \([0-9.]*\).*/\1/p' \
+        | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
         | grep -vE '^127\.|^0\.' \
         | sort \
         | uniq -c \
@@ -55,17 +51,14 @@ echo "" >> "$OUTPUT_FILE"
 echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
-# ------------------------------------------------------------------------------
-# BAGIAN 2: Top 5 IP Akses Web Terbanyak (/var/log/nginx/access.log)
-# ------------------------------------------------------------------------------
+# 2. Top 5 IP Akses Web Terbanyak (/var/log/nginx/access.log)
 echo "--- [2] TOP 5 ALAMAT IP AKSES WEB TERBANYAK (/var/log/nginx/access.log) ---" >> "$OUTPUT_FILE"
 echo "Format: [Jumlah Request] [Alamat IP Klien]" >> "$OUTPUT_FILE"
 echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
 
 if [ -f "$NGINX_LOG" ]; then
-    # Pada format standar log Nginx, IP klien berada pada kolom pertama ($1)
     WEB_ACCESS=$(awk '{print $1}' "$NGINX_LOG" 2>/dev/null \
-        | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+        | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
         | sort \
         | uniq -c \
         | sort -nr \
@@ -85,5 +78,4 @@ echo "==========================================================================
 echo "Laporan selesai dibuat secara otomatis oleh /opt/scripts/analyze_log.sh" >> "$OUTPUT_FILE"
 echo "================================================================================" >> "$OUTPUT_FILE"
 
-# Tampilkan juga isi laporan di layar terminal saat skrip dipanggil langsung
 cat "$OUTPUT_FILE"
