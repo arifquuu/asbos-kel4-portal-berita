@@ -1,0 +1,63 @@
+---
+- name: Provisioning Server Replika Portal Berita Mahasiswa
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Perbarui cache APT dan pastikan paket Nginx serta OpenSSL terpasang
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - openssl
+        state: present
+        update_cache: yes
+
+    - name: Buat user sistem baru untuk pemantauan (monitoring)
+      ansible.builtin.user:
+        name: monitoring
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Buat sertifikat SSL self-signed jika belum ada (untuk port 443)
+      ansible.builtin.command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048
+        -keyout /etc/ssl/private/portal-berita.key
+        -out /etc/ssl/certs/portal-berita.crt
+        -subj "/CN=portal-berita-kel4"
+      args:
+        creates: /etc/ssl/certs/portal-berita.crt
+
+    - name: Salin berkas konfigurasi Reverse Proxy Nginx dari repositori lokal
+      ansible.builtin.copy:
+        src: ../nginx/portal-berita.conf
+        dest: /etc/nginx/sites-available/portal-berita
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload Nginx
+
+    - name: Aktifkan site portal-berita melalui symbolic link
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/portal-berita
+        dest: /etc/nginx/sites-enabled/portal-berita
+        state: link
+      notify: Reload Nginx
+
+    - name: Nonaktifkan site default Nginx agar tidak bentrok pada port 80
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+
+    - name: Pastikan layanan Nginx berjalan dan aktif saat boot
+      ansible.builtin.systemd_service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Reload Nginx
+      ansible.builtin.systemd_service:
+        name: nginx
+        state: reloaded

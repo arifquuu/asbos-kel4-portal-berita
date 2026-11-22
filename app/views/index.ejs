@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Berita Mahasiswa | Kelompok 4</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+
+    <header>
+        <div class="container header-inner">
+            <div>
+                <h1><a class="brand" href="/">Portal Berita Mahasiswa</a></h1>
+                <span class="brand-sub">Kelompok 4: Administrasi Sistem Berbasis Open Source</span>
+            </div>
+            <a class="btn" href="/tambah">Tulis Berita</a>
+        </div>
+    </header>
+
+    <main id="konten-utama" class="container">
+        <nav class="filter-nav" aria-label="Filter kategori berita">
+            <a class="filter-link" href="/" <%- !kategoriAktif ? 'aria-current="page"' : '' %>>Semua Kategori</a>
+            <% daftarKategori.forEach(k=> { %>
+                <a class="filter-link" href="/?kategori=<%= k.id %>" <%- kategoriAktif===k.id ? 'aria-current="page"'
+                    : '' %>>
+                    <%= k.nama %>
+                </a>
+                <% }) %>
+        </nav>
+
+        <section class="news-list" aria-label="Daftar berita mahasiswa">
+            <% if (daftarBerita.length===0) { %>
+                <div class="panel">
+                    <h2 class="news-heading">Belum ada berita pada kategori ini</h2>
+                    <p class="meta">Pilih kategori lain atau publikasikan berita pertama untuk mengisi daftar ini.</p>
+                    <div class="form-actions">
+                        <% if (kategoriAktif) { %>
+                            <a class="btn btn-outline" href="/">Lihat Semua Berita</a>
+                            <% } %>
+                                <a class="btn" href="/tambah">Tulis Berita Pertama</a>
+                    </div>
+                </div>
+                <% } %>
+
+                    <% daftarBerita.forEach(b=> { %>
+                        <article class="panel">
+                            <span class="category-tag">
+                                <%= b.nama_kategori || 'Umum' %>
+                            </span>
+                            <h2 class="news-heading">
+                                <a href="/berita/<%= b.id %>">
+                                    <%= b.judul %>
+                                </a>
+                            </h2>
+                            <p class="meta">
+                                Oleh <strong>
+                                    <%= b.penulis %>
+                                </strong> · <%= new Date(b.created_at).toLocaleString('id-ID') %>
+                            </p>
+                            <% if (b.ringkasan) { %>
+                                <p>
+                                    <%= b.ringkasan %>
+                                </p>
+                                <% } %>
+                                    <a class="read-link" href="/berita/<%= b.id %>">Baca berita lengkap</a>
+                        </article>
+                        <% }) %>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container footer-inner">
+            <span>Portal Berita Mahasiswa (Versi <%= appVersion %>)</span>
+            <a href="/health">Status Layanan (/health)</a>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tulis Berita | Portal Berita Mahasiswa</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+
+    <header>
+        <div class="container header-inner">
+            <a class="brand" href="/">Portal Berita Mahasiswa</a>
+            <nav aria-label="Navigasi halaman">
+                <a class="btn" href="/">Kembali ke Beranda</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="konten-utama" class="container">
+        <section class="panel">
+            <h1 class="page-title">Tulis Berita Mahasiswa</h1>
+            <form id="form-berita" action="/tambah" method="POST">
+                <div class="field">
+                    <label for="judul">Judul Berita</label>
+                    <input type="text" id="judul" name="judul" required placeholder="Masukkan judul berita">
+                </div>
+
+                <div class="field">
+                    <label for="kategori_id">Kategori</label>
+                    <select id="kategori_id" name="kategori_id" required>
+                        <% daftarKategori.forEach(k=> { %>
+                            <option value="<%= k.id %>">
+                                <%= k.nama %>
+                            </option>
+                            <% }) %>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="penulis">Nama Penulis</label>
+                    <input type="text" id="penulis" name="penulis" required placeholder="Nama penulis atau unit kampus">
+                </div>
+
+                <div class="field">
+                    <label for="ringkasan">Ringkasan Singkat</label>
+                    <input type="text" id="ringkasan" name="ringkasan" placeholder="Ringkasan 1 sampai 2 kalimat">
+                </div>
+
+                <div class="field">
+                    <label for="isi">Isi Berita Lengkap</label>
+                    <textarea id="isi" name="isi" rows="6" required
+                        placeholder="Tulis isi berita lengkap di sini"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button id="btn-submit" type="submit" class="btn">Publikasikan Berita</button>
+                    <a href="/" class="btn btn-outline">Batal</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container footer-inner">
+            <span>Portal Berita Mahasiswa (Versi <%= appVersion %>)</span>
+            <a href="/health">Status Layanan (/health)</a>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('form-berita').addEventListener('submit', function () {
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan berita...';
+        });
+    </script>
+</body>
+
+</html>

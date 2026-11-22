@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= berita.judul %> | Portal Berita Mahasiswa
+    </title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+
+    <header>
+        <div class="container header-inner">
+            <a class="brand" href="/">Portal Berita Mahasiswa</a>
+            <nav aria-label="Navigasi halaman">
+                <a class="btn" href="/">Kembali ke Beranda</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="konten-utama" class="container">
+        <article class="panel">
+            <span class="category-tag">
+                <%= berita.nama_kategori || 'Umum' %>
+            </span>
+            <h1 class="page-title">
+                <%= berita.judul %>
+            </h1>
+            <p class="meta">
+                Oleh <strong>
+                    <%= berita.penulis %>
+                </strong> · <%= new Date(berita.created_at).toLocaleString('id-ID') %>
+            </p>
+            <% if (berita.ringkasan) { %>
+                <p><strong>
+                        <%= berita.ringkasan %>
+                    </strong></p>
+                <% } %>
+                    <div class="article-body">
+                        <%= berita.isi %>
+                    </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container footer-inner">
+            <span>Portal Berita Mahasiswa (Versi <%= appVersion %>)</span>
+            <a href="/health">Status Layanan (/health)</a>
+        </div>
+    </footer>
+</body>
+
+</html>

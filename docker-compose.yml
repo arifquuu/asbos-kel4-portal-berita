@@ -1,0 +1,11 @@
+services:
+  web:
+    build: ./app
+    container_name: portal-berita-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ./app/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

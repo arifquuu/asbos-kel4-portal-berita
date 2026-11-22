@@ -1,0 +1,51 @@
+name: CI/CD Portal Berita Mahasiswa
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies dan cek sintaks server.js
+        working-directory: ./app
+        run: |
+          npm ci --omit=dev
+          node --check server.js
+
+      - name: Uji build Docker image
+        run: docker build -t portal-berita-ci ./app
+
+  deploy:
+    needs: build-and-check
+    if: ${{ vars.ENABLE_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy otomatis ke VPS via SSH (port kustom)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$VPS_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "
+            set -e
+            cd /var/www/portal-berita
+            git pull origin main
+            docker compose up -d --build
+          "

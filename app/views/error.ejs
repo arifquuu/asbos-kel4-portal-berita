@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terjadi Kendala (<%= statusCode %>) | Portal Berita Mahasiswa</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="container header-inner">
+            <a class="brand" href="/">Portal Berita Mahasiswa</a>
+            <nav aria-label="Navigasi halaman">
+                <a class="btn" href="/">Kembali ke Beranda</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="konten-utama" class="container">
+        <section class="panel panel-error" role="alert">
+            <h1 class="page-title">Status <%= statusCode %>: Permintaan tidak dapat diproses</h1>
+            <p>
+                <%= pesan %>
+            </p>
+            <div class="form-actions">
+                <a class="btn" href="/">Kembali ke Beranda</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container footer-inner">
+            <span>Portal Berita Mahasiswa (Versi <%= appVersion %>)</span>
+        </div>
+    </footer>
+</body>
+
+</html>

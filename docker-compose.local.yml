@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: portal_berita_db
+      POSTGRES_USER: berita_user
+      POSTGRES_PASSWORD: local_dev_password
+    volumes:
+      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U berita_user -d portal_berita_db" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: ./app
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      PORT: 3000
+      APP_VERSION: v1.0-local
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: portal_berita_db
+      DB_USER: berita_user
+      DB_PASS: local_dev_password
+    depends_on:
+      db:
+        condition: service_healthy
