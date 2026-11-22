@@ -1,34 +1,21 @@
 #!/bin/bash
-# ==============================================================================
-# Skrip Analisis Log Server (Pemantauan Keamanan & Akses Web)
-# Penanggung Jawab: Fadjri (Role 1 - System Administrator & Security Lead)
-# Lokasi: /opt/scripts/analyze_log.sh
-# Output: /var/log/laporan_anomali.txt
-# ==============================================================================
+# Analisis log server: percobaan gagal SSH dan statistik akses web
+# Kelompok 4 - Portal Berita Mahasiswa
 
 OUTPUT_FILE="/var/log/laporan_anomali.txt"
 AUTH_LOG="/var/log/auth.log"
 NGINX_LOG="/var/log/nginx/access.log"
 
-cat << 'EOF' > "$OUTPUT_FILE"
-================================================================================
-                    LAPORAN ANALISIS LOG & ANOMALI SERVER
-                   Kelompok 4 - Portal Berita Mahasiswa
-================================================================================
+cat << EOF > "$OUTPUT_FILE"
+Laporan Analisis Log Server
+Waktu: $(date '+%Y-%m-%d %H:%M:%S %Z')
+Host : $(hostname)
+Pemeriksa: Fadjri (Role 1 - System Administrator & Security Lead)
+
 EOF
-echo "Waktu Pembuatan Laporan : $(date '+%Y-%m-%d %H:%M:%S %Z')" >> "$OUTPUT_FILE"
-echo "Host Server             : $(hostname)" >> "$OUTPUT_FILE"
-echo "Pemeriksa (Role 1)      : Fadjri (System Administrator & Security Lead)" >> "$OUTPUT_FILE"
-echo "================================================================================" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
 
-# 1. Top 5 IP Percobaan Gagal Login SSH (/var/log/auth.log)
-echo "--- [1] TOP 5 ALAMAT IP GAGAL LOGIN SSH (/var/log/auth.log) ---" >> "$OUTPUT_FILE"
-echo "Format: [Jumlah Percobaan Gagal] [Alamat IP Penyerang]" >> "$OUTPUT_FILE"
-echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
-
+echo "Top 5 IP Gagal Login SSH (/var/log/auth.log):" >> "$OUTPUT_FILE"
 if [ -f "$AUTH_LOG" ]; then
-    # Filter pola kegagalan SSH, ekstrak token setelah 'from', lalu validasi IPv4
     SSH_FAILURES=$(grep -E 'Failed password|Invalid user|Failed publickey|Connection closed.*authenticating' "$AUTH_LOG" 2>/dev/null \
         | sed -n 's/.*from \([0-9.]*\).*/\1/p' \
         | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
@@ -41,21 +28,14 @@ if [ -f "$AUTH_LOG" ]; then
     if [ -n "$SSH_FAILURES" ]; then
         echo "$SSH_FAILURES" >> "$OUTPUT_FILE"
     else
-        echo "Tidak ditemukan catatan percobaan gagal login SSH pada log saat ini (Aman)." >> "$OUTPUT_FILE"
+        echo "Tidak ada catatan kegagalan SSH yang terdeteksi." >> "$OUTPUT_FILE"
     fi
 else
-    echo "PERINGATAN: Berkas $AUTH_LOG tidak ditemukan! (Pastikan rsyslog terpasang)." >> "$OUTPUT_FILE"
+    echo "Berkas $AUTH_LOG belum tersedia." >> "$OUTPUT_FILE"
 fi
 
 echo "" >> "$OUTPUT_FILE"
-echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# 2. Top 5 IP Akses Web Terbanyak (/var/log/nginx/access.log)
-echo "--- [2] TOP 5 ALAMAT IP AKSES WEB TERBANYAK (/var/log/nginx/access.log) ---" >> "$OUTPUT_FILE"
-echo "Format: [Jumlah Request] [Alamat IP Klien]" >> "$OUTPUT_FILE"
-echo "-----------------------------------------------------------------" >> "$OUTPUT_FILE"
-
+echo "Top 5 IP Akses Web Nginx (/var/log/nginx/access.log):" >> "$OUTPUT_FILE"
 if [ -f "$NGINX_LOG" ]; then
     WEB_ACCESS=$(awk '{print $1}' "$NGINX_LOG" 2>/dev/null \
         | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
@@ -67,15 +47,10 @@ if [ -f "$NGINX_LOG" ]; then
     if [ -n "$WEB_ACCESS" ]; then
         echo "$WEB_ACCESS" >> "$OUTPUT_FILE"
     else
-        echo "Belum ada catatan lalu lintas HTTP/HTTPS pada log Nginx." >> "$OUTPUT_FILE"
+        echo "Belum ada catatan akses HTTP/HTTPS." >> "$OUTPUT_FILE"
     fi
 else
-    echo "PERINGATAN: Berkas $NGINX_LOG belum ada (Nginx belum aktif/belum di-generate)." >> "$OUTPUT_FILE"
+    echo "Berkas $NGINX_LOG belum tersedia." >> "$OUTPUT_FILE"
 fi
-
-echo "" >> "$OUTPUT_FILE"
-echo "================================================================================" >> "$OUTPUT_FILE"
-echo "Laporan selesai dibuat secara otomatis oleh /opt/scripts/analyze_log.sh" >> "$OUTPUT_FILE"
-echo "================================================================================" >> "$OUTPUT_FILE"
 
 cat "$OUTPUT_FILE"
